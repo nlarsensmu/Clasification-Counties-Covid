@@ -9,14 +9,12 @@ library("ggpubr")
 library("dplyr")
 library("gsubfn")
 
-source("./clustering_helpers.R")
-
+source("./helpers/helpers.R")
 data <- read_csv("./data/Query1.csv")
-data
-train_percent = 0.7
-test_percent = 0.3
-
-
+train_percent = 0.9
+test_percent = 0.1
 result  = train_test_split(data, train_percent, test_percent)
-train <- result[[1]]
-test <- result[[2]]
+
+#We are going to save off some of the data till the very end.
+write.csv(result[[1]], file = "train.csv")
+write.csv(result[[2]], file = "validation.csv")
