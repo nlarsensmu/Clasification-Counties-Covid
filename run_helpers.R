@@ -10,7 +10,7 @@ library("dplyr")
 library("gsubfn")
 
 source("./helpers/helpers.R")
-data <- read_csv("./data/Query1.csv")
+data <- read_csv("./datatable.csv")
 train_percent = 0.9
 test_percent = 0.1
 result  = train_test_split(data, train_percent, test_percent)

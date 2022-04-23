@@ -7,6 +7,7 @@ library("gridExtra")
 library("knitr")
 library("ggpubr")
 library("dplyr")
+library(qgcomp)
 
  
 
@@ -176,6 +177,32 @@ p1 <- ggplot(data_filtered, aes(x = masters_degree, y = confirmed_cases_per1000)
   ggtitle("Outliers from Normalized Masters Degree and Cases")
 p1
 ggsave(".\\charts\\masters_degree.jpeg", width = 6.5, height = 3)
+
+# Pick confirmed cases categories
+p <- ggplot(data_filtered, aes(y=confirmed_cases_per1000)) + 
+  geom_boxplot()
+p
+
+data_filtered $risk_cases <-
+  data_filtered %>%
+    pull(confirmed_cases_per1000) %>%
+      cut(breaks=c(-Inf,90,110,Inf), 
+          labels=c("low", "middle", "high"))
+
+## Incase we pivoit to using deaths 
+
+# Pick confirmed cases categories
+p <- ggplot(data_filtered, aes(y=deaths_per1000)) + 
+  geom_boxplot()
+p
+
+data_filtered $risk_deaths <-
+  data_filtered %>%
+  pull(deaths_per1000) %>%
+  cut(breaks=c(-Inf,1.1,2.5,Inf), 
+      labels=c("low", "middle", "high"))
+
+summary(data_filtered)
 
 data_filtered %>% write.csv(file = "datatable.csv")
 
