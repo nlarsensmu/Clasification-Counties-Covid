@@ -10,6 +10,7 @@ library("dplyr")
 
  
 
+# the last 356 days of data from the pandemic and census
 data_init <- read_csv("./data/query1.csv")
 
 # Select the columns we are thinking about investigating
@@ -28,6 +29,7 @@ data_init <- data_init %>% select(total_pop,
                                   percent_income_spent_on_rent,
                                   high_school_diploma,
                                   less_one_year_college,
+                                  bachelors_degree,
                                   masters_degree,
                                   commute_less_10_mins,
                                   commute_10_14_mins,
@@ -40,7 +42,10 @@ data_init <- data_init %>% select(total_pop,
                                   commute_45_59_mins,
                                   commute_60_more_mins,
                                   deaths,
-                                  confirmed_cases)
+                                  confirmed_cases,
+                                  county_name,
+                                  state,
+                                  county_fips_code)
 
 
 # We are going to use some intuition to combine some columns
@@ -73,13 +78,27 @@ data_init <- data_init %>% select(
   percent_income_spent_on_rent,
   high_school_diploma,
   less_one_year_college,
+  bachelors_degree,
   masters_degree,
   commute_less_than_30,
   commute_30_60,
   commute_more_than_60,
   deaths,
-  confirmed_cases
+  confirmed_cases,
+  county_name,
+  state,
+  county_fips_code
 )
+
+
+
+# Get cases/deaths per 1000
+data_init$confirmed_cases_per1000 = data_init$confirmed_cases / 
+  (data_init$total_pop)*1000
+data_init$deaths_per1000 = data_init$deaths / 
+  (data_init$total_pop)*1000
+
+summary(data_init)
 
 # Normalize population fields (taken from R companion)
 scale_numeric <- 
@@ -87,55 +106,82 @@ scale_numeric <-
 data_scaled <- data_init %>% scale_numeric()
 
 # reset the deaths and cases
-data_scaled$deaths <- data_init$deaths
-data_scaled$confirmed_cases <- data_init$confirmed_cases
+data_scaled$deaths_per1000 <- data_init$deaths_per1000
+data_scaled$confirmed_cases_per1000 <- data_init$confirmed_cases_per1000
 
 summary(data_scaled)
 
 # Investigate Outliers
-# Investigate Population vs cases and deaths
-p1 <- ggplot(data_scaled, aes(x = original_total_pop, y = confirmed_cases_per1000)) + 
-  geom_point()
+
+## Investigate Population vs cases and deaths
+p1 <- ggplot(data_scaled, aes(x = total_pop, y = confirmed_cases_per1000)) + 
+  geom_rect(mapping=aes(xmin=-1, xmax=10, ymin=0, ymax=300), 
+            color="blue", fill="blue", alpha=0.1) +
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from normalized Population and Cases")
 p1
-target <- max(temp$original_total_pop)
-target
+ggsave(".\\charts\\population_outliers.jpeg", width = 6.5, height = 3)
 
-match(temp$original_total_pop, target)
+## Fetch the counties we are removing and note them
+outliers <- data_scaled %>% filter(total_pop > 10 | confirmed_cases_per1000 > 300)
+outliers$county_name
+outliers$state
 
-outlier_row = temp %>% filter(original_total_pop > 7.5e6)
-outlier_row$county_name
-outlier_row$state
-outlier_row$county_fips_code
+data_filtered <- data_scaled %>% filter(total_pop < 10 & confirmed_cases_per1000 < 300)
 
-p1 <- ggplot(temp, aes(x = original_total_pop, y = deaths)) + 
-  geom_point() +
-  geom_text(data = temp,
-            aes(x = 1e07-21e5, y = 1.425e4, label = "LA County >>")) +
-  ggtitle("Cases per Population Outliers")
-p2 <- ggplot(temp, aes(x = original_total_pop, y = confirmed_cases)) + 
-  geom_point() +
-  geom_text(data = temp,
-            aes(x = 1e07-21e5, y = 9.3e5, label = "LA County >>")) +
-  ggtitle("Deaths per Population Outliers")
+## Investigate Median Age
+p1 <- ggplot(data_filtered, aes(x = median_age, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from normalized and cases Population")
+p1
+
+## Investigate median_income
+p1 <- ggplot(data_filtered, aes(x = median_income, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from Median Income and Cases")
+p1
+ggsave(".\\charts\\median_income_outliers.jpeg", width = 6.5, height = 3)
+
+## Investigate median_rent
+p1 <- ggplot(data_filtered, aes(x = median_rent, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from Median Rent and Cases")
+p1
+ggsave(".\\charts\\median_rent_outliers.jpeg", width = 6.5, height = 3)
+
+#percent_income_spent_on_rent
+p1 <- ggplot(data_filtered, aes(x = percent_income_spent_on_rent, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from % of income spent on Rent and Cases")
+p1
+ggsave(".\\charts\\percent_income_spent_on_rent.jpeg", width = 6.5, height = 3)
+
+# high_school_diploma outliers
+p1 <- ggplot(data_filtered, aes(x = high_school_diploma, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from Normalized High School  Diploma holders and Cases")
+p1
+ggsave(".\\charts\\high_school_diploma.jpeg", width = 6.5, height = 3)
+
+# bachelors_degree
+p1 <- ggplot(data_filtered, aes(x = bachelors_degree, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from Normalized Bachelors Degree and Cases")
+p1
+ggsave(".\\charts\\bachelors_degree.jpeg", width = 6.5, height = 3)
+
+# masters_degree
+p1 <- ggplot(data_filtered, aes(x = masters_degree, y = confirmed_cases_per1000)) + 
+  geom_point(size = 0.5) +
+  ggtitle("Outliers from Normalized Masters Degree and Cases")
+p1
+ggsave(".\\charts\\masters_degree.jpeg", width = 6.5, height = 3)
+
+data_filtered %>% write.csv(file = "datatable.csv")
 
 
-g <- ggarrange(p1, p2)
-annotate_figure(g, top = text_grob("Populations vs Deaths and Cases"))
-
-ggsave("./charts/DeathsCasesPlot.jpg", width = 6.5, height = 3)
-
-# Filter out LA county.
-
-temp <- temp %>% filter(county_fips_code != "06037")
-
-
-temp
-
-temp <- temp %>% filter(original_total_pop >= 1000)
-
-temp %>% write.csv(file = "datatable.csv")
-
-
+##################################
+### play ground
 source("./clustering_helpers.R")
 data <- temp
 
