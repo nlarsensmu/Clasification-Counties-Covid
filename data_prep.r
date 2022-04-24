@@ -7,8 +7,8 @@ library("gridExtra")
 library("knitr")
 library("ggpubr")
 library("dplyr")
-library(qgcomp)
-
+library("qgcomp")
+library("ggcorrplot")
  
 
 # the last 356 days of data from the pandemic and census
@@ -101,10 +101,32 @@ data_init$deaths_per1000 = data_init$deaths /
 
 summary(data_init)
 
-# Normalize population fields (taken from R companion)
-scale_numeric <- 
-  function(x) x %>% mutate_if(is.numeric, function(y) as.vector(scale(y)))
-data_scaled <- data_init %>% scale_numeric()
+# Normalize total_pop (taken from R companion)
+data_scaled <- data_init
+data_scaled$total_pop <- as.vector(scale(data_scaled$total_pop))
+data_scaled$median_age <- as.vector(scale(data_scaled$median_age))
+data_scaled$median_income <- as.vector(scale(data_scaled$median_income))
+data_scaled$median_rent <- as.vector(scale(data_scaled$median_rent))
+data_scaled$percent_income_spent_on_rent <- as.vector(scale(data_scaled$percent_income_spent_on_rent))
+
+#Every column from here on out will be noramilized based on population.
+#The resulting columns will be X per 1000 peoples
+data_scaled$white_pop <- data_scaled$white_pop / data_init$total_pop * 1000
+data_scaled$black_pop <- data_scaled$black_pop / data_init$total_pop * 1000
+data_scaled$asian_pop <- data_scaled$asian_pop/ data_init$total_pop * 1000
+data_scaled$hispanic_pop <- data_scaled$hispanic_pop / data_init$total_pop * 1000
+data_scaled$amerindian_pop <- data_scaled$amerindian_pop / data_init$total_pop * 1000
+data_scaled$other_race_pop <- data_scaled$other_race_pop / data_init$total_pop * 1000
+data_scaled$two_or_more_races_pop <- data_scaled$two_or_more_races_pop / data_init$total_pop * 1000
+data_scaled$commuters_by_public_transportation <- data_scaled$commuters_by_public_transportation / data_init$total_pop * 1000
+data_scaled$high_school_diploma <- data_scaled$high_school_diploma / data_init$total_pop * 1000
+data_scaled$less_one_year_college <- data_scaled$less_one_year_college / data_init$total_pop * 1000
+data_scaled$bachelors_degree <- data_scaled$bachelors_degree / data_init$total_pop * 1000
+data_scaled$masters_degree <- data_scaled$masters_degree / data_init$total_pop * 1000
+data_scaled$commute_less_than_30 <- data_scaled$commute_less_than_30 / data_init$total_pop * 1000
+data_scaled$commute_30_60 <- data_scaled$commute_30_60 / data_init$total_pop * 1000
+data_scaled$commute_more_than_60 <- data_scaled$commute_more_than_60 / data_init$total_pop * 1000
+
 
 # reset the deaths and cases
 data_scaled$deaths_per1000 <- data_init$deaths_per1000
@@ -209,48 +231,26 @@ data_filtered $risk_deaths <-
 
 summary(data_filtered)
 
+
+
+
+
 data_filtered %>% write.csv(file = "datatable.csv")
 
 
 ##################################
 ### play ground
-source("./clustering_helpers.R")
-data <- temp
+corr_data <- select(data_filtered,
+  masters_degree,
+  commute_less_than_30,
+  commute_30_60,
+  commute_more_than_60,
+  deaths,
+  confirmed_cases
+)
 
-data$deaths_per10000 <-  data$deaths_per1000 * 10
-n <- 5
-vect <- data$deaths_per10000
-vect <- sort(vect)
-l <- length(data$deaths_per10000)
-break_deaths <- c(-Inf)
-n <- n + 1
-window <- l %/% ((n - 1))
-for (i in 1:(n-2)) {
-  print(i*window)
-  break_deaths <- append(break_deaths, vect[i*window])
-}
-break_deaths <- append(break_deaths, Inf)
-
-
-labels_deaths <- c()
-for (i in 1:(n-1)) {
-  labels_deaths <- append(labels_deaths, paste("deaths_class_", i, sep = ""))
-}
-labels_deaths
-
-cut(data$deaths_per10000,
-    breaks = break_deaths,
-    labels = labels_deaths)
-
-test <- catagorize_deaths(data, 5)
-data$deaths_class = test
-print(data %>% filter(deaths_class == "deaths_class_3"))
-catagorize_cases(data, 5)
-
-n
-cut1 <- med - min
-cut2 <- max - med
-cut(data$confirmed_cases_per1000, 
-    breaks=c(-Inf, cut1, cut2, Inf), 
-    labels=c("low","middle","high"))
-
+corr_data$random <- runif(3136, min=0, max=100)
+cm1 <- corr_data %>% as.matrix %>% cor()
+cm1
+p <- ggcorrplot(cm1)
+p
