@@ -180,14 +180,19 @@ ggsave(".\\charts\\masters_degree.jpeg", width = 6.5, height = 3)
 
 # Pick confirmed cases categories
 p <- ggplot(data_filtered, aes(y=confirmed_cases_per1000)) + 
-  geom_boxplot()
+  geom_boxplot() +
+  ggtitle("Box Plot of Confirmed Cases per 1000 people")
 p
+ggsave(".\\charts\\confirmed_cases.jpeg", width = 6.5, height = 3)
 
 data_filtered $risk_cases <-
   data_filtered %>%
     pull(confirmed_cases_per1000) %>%
-      cut(breaks=c(-Inf,90,110,Inf), 
+      cut(breaks=c(-Inf,80,110,Inf), 
           labels=c("low", "middle", "high"))
+
+summary(data_filtered %>% select(risk_cases))
+
 
 ## Incase we pivoit to using deaths 
 
