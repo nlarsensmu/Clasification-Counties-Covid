@@ -210,8 +210,8 @@ ggsave(".\\charts\\confirmed_cases.jpeg", width = 6.5, height = 3)
 data_filtered $risk_cases <-
   data_filtered %>%
     pull(confirmed_cases_per1000) %>%
-      cut(breaks=c(-Inf,80,110,Inf), 
-          labels=c("low", "middle", "high"))
+      cut(breaks=c(-Inf,110,Inf), 
+          labels=c("low", "high"))
 
 summary(data_filtered %>% select(risk_cases))
 
@@ -226,30 +226,59 @@ p
 data_filtered $risk_deaths <-
   data_filtered %>%
   pull(deaths_per1000) %>%
-  cut(breaks=c(-Inf,1.1,2.5,Inf), 
-      labels=c("low", "middle", "high"))
+  cut(breaks=c(-Inf,2.5,Inf), 
+      labels=c("low", "high"))
 
 summary(data_filtered)
 
 
 
 
-
+data_filtered <- drop_na(data_filtered)
 data_filtered %>% write.csv(file = "datatable.csv")
 
 
 ##################################
 ### play ground
 corr_data <- select(data_filtered,
-  masters_degree,
-  commute_less_than_30,
-  commute_30_60,
-  commute_more_than_60,
-  deaths,
-  confirmed_cases
+                    total_pop,
+                    median_age,
+                    white_pop,
+                    black_pop,
+                    asian_pop,
+                    hispanic_pop,
+                    amerindian_pop,
+                    other_race_pop,
+                    two_or_more_races_pop,
+                    commuters_by_public_transportation,
+                    median_income,
+                    median_rent,
+                    percent_income_spent_on_rent,
+                    high_school_diploma,
+                    less_one_year_college,
+                    bachelors_degree,
+                    masters_degree,
+                    commute_less_than_30,
+                    commute_30_60,
+                    commute_more_than_60,
+                    deaths,
+                    confirmed_cases
 )
 
 corr_data$random <- runif(3136, min=0, max=100)
+cm1 <- corr_data %>% as.matrix %>% cor()
+cm1
+p <- ggcorrplot(cm1)
+p
+corr_data <- select(data_filtered,
+                    median_rent,
+                    percent_income_spent_on_rent,
+                    deaths,
+                    confirmed_cases
+)
+
+corr_data$random <- runif(3136, min=0, max=100)
+corr_data <- drop_na(corr_data)
 cm1 <- corr_data %>% as.matrix %>% cor()
 cm1
 p <- ggcorrplot(cm1)

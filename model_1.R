@@ -11,33 +11,139 @@ library("qgcomp")
 library("rpart")
 library("caret")
 library(rpart.plot)
-
+library("e1071")
+library("pROC")
+library("ROSE")
+library(randomForest)
+library(caret)
 source("./helpers/helpers.R")
+set.seed(1)
+train_original <- read.csv("train.csv")
+test_original <- read.csv("validation.csv")
 
-data <- read.csv("train.csv")
-test <- read.csv("validation.csv")
-test <- get_subset_all(test)
-data_all <- get_subset_all(data)
+## We have a class imbalance on our hands. To help solve this we will 
+## to sovle this we will use over sampling 
+
+data_1 <- get_subset_1(train_original)
+test_1 <- get_subset_1(test_original)
+data_2 <- get_subset_2(train_original)
+test_2 <- get_subset_2(test_original)
+data_3 <- get_subset_3(train_original)
+test_3 <- get_subset_3(test_original)
+data_all <- get_subset_all(train_original)
+test_all <- get_subset_all(test_original)
+
+count <- as.integer(count(train_original)[[1]] * 1.4)
+typeof(count)
+data_1_over <- ovun.sample(risk_cases_numbers ~., data = data_1, method = "over", N = count)$data
+data_2_over <- ovun.sample(risk_cases_numbers ~., data = data_2, method = "over", N = count)$data
+data_3_over <- ovun.sample(risk_cases_numbers ~., data = data_3, method = "over", N = count)$data
+data_all_over <- ovun.sample(risk_cases_numbers ~., data = data_all, method = "over", N = count)$data
+
+#### NOTE method=
+#tuneLength = 20
+#method = "cv"
+#number_of_folds = 10
+#ctrl <- trainControl(
+#  method = "repeatedcv", 
+#  repeats = 3,
+#  classProbs = TRUE, 
+#  summaryFunction = twoClassSummary
+#)
+
+tuneLength = 20
+number_of_folds = 10
+ctrl <- trainControl(
+  method = "repeatedcv", 
+  repeats = 10,
+  classProbs = TRUE, 
+  summaryFunction = twoClassSummary
+)
+grid <- createGrid("knn", len=4)
+
+grid <- expand.grid(.k = (4:15))
+method = "knn"
+model_1 <- data_1_over %>%
+  train(risk_cases_numbers ~ .,
+        data = . ,
+        method = method,
+        trControl = ctrl,
+        tuneLength = tuneLength, 
+        metric = "ROC",
+        tuneGrid = grid
+  )
+
+model_2 <- data_2_over %>%
+  train(risk_cases_numbers ~ .,
+        data = . ,
+        method = method,
+        trControl = ctrl,
+        tuneLength = tuneLength, 
+        metric = "ROC",
+        tuneGrid = grid
+  )
 
 
-tree_default_all <- data_all %>% 
-  rpart(risk_cases_numbers ~ ., data = .,control = rpart.control(minsplit = 2, cp = cp))
+model_3 <- data_3_over %>%
+  train(risk_cases_numbers ~ .,
+        data = . ,
+        method = method,
+        trControl = ctrl,
+        tuneLength = tuneLength, 
+        metric = "ROC",
+        tuneGrid = grid
+  )
 
-yhat_all <- predict(tree_default_all, test, type="class")
+model_all <- data_all_over %>%
+  train(risk_cases_numbers ~ .,
+        data = . ,
+        method = method,
+        trControl = ctrl,
+        tuneLength = tuneLength, 
+        metric = "ROC",
+        tuneGrid = grid
+  )
 
-test <- select(test, -risk_cases_numbers)
+#create the confusion matrix as well as calculate other data
+conf_1 <- print_accuracy(model_1, data_1, test_1)
+conf_2 <- print_accuracy(model_2, data_2, test_2)
+conf_3 <- print_accuracy(model_3, data_3, test_3)
+conf_all <- print_accuracy(model_all, data_all, test_all)
 
-print(confusionMatrix(yhat_all, reference = test$risk_cases_numbers)$overall[[1]])
+#create graph that compares the accuracies 
+fig <- compare_model_acc(conf_1, conf_2, conf_3, conf_all)
+fig
+ggsave(".\\charts\\model_1\\accuracies.png",  plot = fig,  
+       width = 6.5,  height = 3,  units =  "in"
+)
+#create the roc charts 
+title <- "KNN"
+roc <- get_roc(model_1, data_1, test_1)
+roc <- roc + ggtitle(paste(title, " 1"))
+roc
+ggsave(".\\charts\\model_1\\roc_1.png",  plot = roc,  
+       width = 6.5,  height = 3,  units =  "in"
+)
 
-train_index <- createFolds(data_all$risk_cases_numbers, k = 10)
+roc <- get_roc(model_2, data_2, test_2)
+roc <- roc + ggtitle(paste(title, " 2"))
+roc
+ggsave(".\\charts\\model_1\\roc_2.png",  plot = roc,  
+       width = 6.5,  height = 3,  units =  "in"
+)
 
-ctreeFit <- data_all %>% train(risk_cases_numbers ~ .,
-                                method = "ctree",
-                                data = .,
-                                tuneLength = 5,
-                                trControl = trainControl(method = "cv", indexOut = train_index))
+roc <- get_roc(model_3, data_3, test_3)
+roc <- roc + ggtitle(paste(title, " 3"))
+roc
+ggsave(".\\charts\\model_1\\roc_3.png",  plot = roc,  
+          width = 6.5,  height = 3,  units =  "in"
+)
 
-
-ctreeFit
+roc <- get_roc(model_all, data_all, test_all)
+roc <- roc + ggtitle(paste(title, " all"))
+roc
+ggsave(".\\charts\\model_1\\roc_all.png",  plot = roc,  
+          width = 6.5,  height = 3,  units =  "in"
+)
 
 
