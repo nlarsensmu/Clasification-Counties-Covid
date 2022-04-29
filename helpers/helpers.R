@@ -92,3 +92,60 @@ get_subset_all <- function(data) {
          commute_more_than_60,
          risk_cases_numbers)
 }
+
+print_accuracy <- function(model, train_data, test_data) { 
+  yhat_train <- predict(model, train_data)
+  conf_train <- confusionMatrix(yhat_train, train_data$risk_cases_numbers)
+  print(conf_train$overall)
+  print(conf_train$table)
+  
+  yhat_test <- predict(model, test_data)
+  conf_test <- confusionMatrix(yhat_test, test_data$risk_cases_numbers)
+  print(conf_test$overall)
+  print(conf_test$table)
+  
+  c(conf_test, conf_train)
+}
+
+get_roc <- function(model, train_data, test_data) {
+  yhat_test <- predict(model, test_data, type="prob")
+  r_test <- roc(test_data$risk_cases_numbers == 'high', yhat_test[,"high"])
+  test_auc <- r_test$auc
+  ggroc(r_test)
+  yhat_train <- predict(model, train_data, type="prob")
+  r_train <- roc(train_data$risk_cases_numbers == 'high', yhat_train[,"high"])
+  train_auc <- r_train$auc
+  r_train
+  ggroc(r_train)
+  
+  train_ruc_string <- paste("Train AUC (", round(r_train$auc, 4), ")")
+  test_ruc_string <- paste("Validation AUC (", round(r_test$auc, 4), ")")
+  ggroc(list(train = r_train, validation = r_test)) +
+    annotate("text", x = c(0.50,0.50), y=c(0.25,0.20), label = c(test_ruc_string, train_ruc_string))
+}
+
+compare_model_acc <- function(conf_1, conf_2, conf_3, conf_all){
+  model_names <- rep(c("Dataset_1", "Dataset_2","Dataset_3","All Columns"),3)
+  
+  metric_names <- c(rep("Recall", 4), rep("Precision", 4), rep("Accuracy", 4))
+  
+  recalls <- c(conf_1$byClass[["Recall"]], conf_2$byClass[["Recall"]], 
+               conf_3$byClass[["Recall"]], conf_all$byClass[["Recall"]])
+  
+  
+  precisions <- c(conf_1$byClass[["Precision"]], conf_2$byClass[["Precision"]], 
+                  conf_3$byClass[["Precision"]], conf_all$byClass[["Precision"]])
+  
+  
+  accuracys <- c(conf_1$overall[["Accuracy"]], conf_2$overall[["Accuracy"]], 
+                 conf_3$overall[["Accuracy"]], conf_all$overall[["Accuracy"]])
+  
+  all_metrics <- c(recalls, precisions, accuracys)
+  
+  bar_data <- data.frame(model_names, metric_names, all_metrics)
+  ggplot(bar_data, aes(fill=metric_names, y=all_metrics, x=model_names)) + 
+    geom_bar(position="dodge", stat="identity") +
+    ggtitle("Comparing Model Accuracy") + 
+    ylab("Accuracy") + xlab("Model") +
+    ylim(0, 1)
+}

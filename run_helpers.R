@@ -11,6 +11,8 @@ library("gsubfn")
 
 source("./helpers/helpers.R")
 data <- read_csv("./datatable.csv")
+data$risk_deaths
+data$risk_cases
 train_percent = 0.9
 test_percent = 0.1
 result  = train_test_split(data, train_percent, test_percent)
