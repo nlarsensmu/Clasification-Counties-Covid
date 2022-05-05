@@ -150,6 +150,7 @@ compare_model_acc <- function(conf_1, conf_2, conf_3, conf_all){
     ylim(0, 1)
 }
 
+<<<<<<< HEAD
 compare_model_acc_hard_code <- function(acc, recall, prec){
   model_names <- rep(c("Scores"),3)
   
@@ -197,3 +198,16 @@ accuracys <- c(0.5623, 0.571, 0.7431, 0.6435)
 precisions <- c(0.375, 0.377, 0.577, 0.691)
 
 compare_models(model_names, recalls, accuracys, precisions)
+=======
+plot_pca_groups <- function(train_data, yhat) {
+  
+  data_temp = train_data[1:length(names(train_data))-1]
+  data_temp["yhat"] = yhat
+  
+  data_temp.pca <- prcomp(data_temp[1:length(names(data_temp))-1])
+  
+  autoplot(data_temp.pca,
+           data=data_temp,
+           colour = 'yhat')
+}
+>>>>>>> origin/add_pca_plots
