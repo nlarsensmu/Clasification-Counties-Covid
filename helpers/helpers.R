@@ -149,3 +149,51 @@ compare_model_acc <- function(conf_1, conf_2, conf_3, conf_all){
     ylab("Accuracy") + xlab("Model") +
     ylim(0, 1)
 }
+
+compare_model_acc_hard_code <- function(acc, recall, prec){
+  model_names <- rep(c("Scores"),3)
+  
+  metric_names <- c(rep("Recall", 1), rep("Precision", 1), rep("Accuracy", 1))
+  
+  recalls <- c(recall)
+  
+  
+  precisions <- c(prec)
+  
+  
+  accuracys <- c(acc)
+  
+  all_metrics <- c(recalls, precisions, accuracys)
+  
+  bar_data <- data.frame(model_names, metric_names, all_metrics)
+  ggplot(bar_data, aes(fill=metric_names, y=all_metrics, x=model_names)) + 
+    geom_bar(position="dodge", stat="identity") +
+    ggtitle("Comparing Model Accuracy") + 
+    ylab("Accuracy") + xlab("Model") +
+    ylim(0, 1)
+}
+
+compare_model_acc_hard_code(0.6651982378854625,0.8628571428571429,0.6805111821086262)
+
+
+compare_models <- function(model_names, recalls, accuracys, precisions){
+  
+  model_names <- rep(model_names,3)
+  metric_names <- c(rep("Recall", 4), rep("Precision", 4), rep("Accuracy", 4))
+  
+  all_metrics <- c(recalls, precisions, accuracys)
+  
+  bar_data <- data.frame(model_names, metric_names, all_metrics)
+  ggplot(bar_data, aes(fill=metric_names, y=all_metrics, x=model_names)) + 
+    geom_bar(position="dodge", stat="identity") +
+    ggtitle("Comparing Model Accuracy") + 
+    ylab("Accuracy") + xlab("Model") +
+    ylim(0, 1)
+}
+
+model_names <- c("KNN","R Part", "CTREE", "ANN")
+recalls <- c(0.740, 0.7725, 0.6015, 0.8624)
+accuracys <- c(0.5623, 0.571, 0.7431, 0.6435)
+precisions <- c(0.375, 0.377, 0.577, 0.691)
+
+compare_models(model_names, recalls, accuracys, precisions)
