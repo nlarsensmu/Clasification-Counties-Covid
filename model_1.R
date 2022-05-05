@@ -147,3 +147,27 @@ ggsave(".\\charts\\model_1\\roc_all.png",  plot = roc,
 )
 
 
+plot_pca_groups(select(data_1, -risk_cases_numbers), predict(model_1, select(data_1, -risk_cases_numbers))) + 
+  ggtitle("PCA on Set 1")
+ggsave(".\\charts\\model_1\\pca_1.png" ,
+       width = 6.5,  height = 3,  units =  "in"
+)
+
+plot_pca_groups(select(data_2, -risk_cases_numbers), predict(model_2, data_2[1:length(names(data_2))-1])) + 
+  ggtitle("PCA on Set 2")
+ggsave(".\\charts\\model_1\\pca_2.png" ,
+       width = 6.5,  height = 3,  units =  "in"
+)
+
+plot_pca_groups(select(data_3, -risk_cases_numbers), predict(model_3, data_3[1:length(names(data_3))-1])) + 
+  ggtitle("PCA on Set 3")
+ggsave(".\\charts\\model_1\\pca_3.png",
+       width = 6.5,  height = 3,  units =  "in"
+)
+
+plot_pca_groups(select(data_all, -risk_cases_numbers), predict(model_all, data_all[1:length(names(data_all))-1])) + 
+  ggtitle("PCA on Set All")
+ggsave(".\\charts\\model_1\\pca_all.png",
+       width = 6.5,  height = 3,  units =  "in"
+)
+
