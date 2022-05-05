@@ -149,3 +149,15 @@ compare_model_acc <- function(conf_1, conf_2, conf_3, conf_all){
     ylab("Accuracy") + xlab("Model") +
     ylim(0, 1)
 }
+
+plot_pca_groups <- function(train_data, yhat) {
+  
+  data_temp = train_data[1:length(names(train_data))-1]
+  data_temp["yhat"] = yhat
+  
+  data_temp.pca <- prcomp(data_temp[1:length(names(data_temp))-1])
+  
+  autoplot(data_temp.pca,
+           data=data_temp,
+           colour = 'yhat')
+}
