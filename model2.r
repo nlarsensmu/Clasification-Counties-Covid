@@ -93,9 +93,10 @@ ggsave(".\\charts\\model_2\\model2_1imp.png",  plot = plt,
        width = 6.5,  height = 3,  units =  "in"
 )
 
-plot_pca_groups(select(data_1, -risk_cases_numbers), predict(model_1, select(data_1, -risk_cases_numbers))) + 
+p <- plot_pca_groups(select(data_1, -risk_cases_numbers), predict(model_1, select(data_1, -risk_cases_numbers))) + 
   ggtitle("PCA on Set 1")
-ggsave(".\\charts\\model_2\\pca_1.png",  plot = roc,  
+p
+ggsave(".\\charts\\model_2\\pca_1.png",  plot = p,  
        width = 6.5,  height = 3,  units =  "in"
 )
 
@@ -108,9 +109,9 @@ model_2 <- data_2_over %>%
         metric = "ROC"
   )
 
-plot_pca_groups(data_2, predict(model_2, data_2[1:length(names(data_2))-1])) + 
+p <- plot_pca_groups(data_2, predict(model_2, data_2[1:length(names(data_2))-1])) + 
   ggtitle("PCA on Set 2")
-ggsave(".\\charts\\model_2\\pca_2.png",  plot = roc,  
+ggsave(".\\charts\\model_2\\pca_2.png",  plot = p,  
        width = 6.5,  height = 3,  units =  "in"
 )
 
@@ -137,9 +138,9 @@ ggsave(".\\charts\\model_2\\model2_3imp.png",  plot = plt,
        width = 6.5,  height = 3,  units =  "in"
 )
 
-plot_pca_groups(data_3, predict(model_3, data_3[1:length(names(data_3))-1])) + 
+p <- plot_pca_groups(data_3, predict(model_3, data_3[1:length(names(data_3))-1])) + 
   ggtitle("PCA on Set 3")
-ggsave(".\\charts\\model_2\\pca_3.png",  plot = roc,  
+ggsave(".\\charts\\model_2\\pca_3.png",  plot = p,  
        width = 6.5,  height = 3,  units =  "in"
 )
 
@@ -157,6 +158,13 @@ model_all <- data_all_over %>%
 imp <- varImp(model_all, compete = FALSE)
 plt <- ggplot(imp) + ggtitle("Model 2 Feature Set ALL Importance")
 ggsave(".\\charts\\model_2\\model2_allimp.png",  plot = plt,
+       width = 6.5,  height = 3,  units =  "in"
+)
+
+p <- plot_pca_groups(data_all, predict(model_all, select(data_all, -risk_cases_numbers))) + 
+  ggtitle("PCA on Set ALL")
+p
+ggsave(".\\charts\\model_2\\pca_all.png",  plot = p,  
        width = 6.5,  height = 3,  units =  "in"
 )
 
