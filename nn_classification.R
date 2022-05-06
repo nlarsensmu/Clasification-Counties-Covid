@@ -20,51 +20,19 @@ library(caret)
 source("./helpers/helpers.R")
 library(tensorflow)
 library("keras")
-
-
 train_original <- read.csv("train.csv")
 test_original <- read.csv("validation.csv")
+data_all <- get_subset_all(train_original)
+test_all <- get_subset_all(test_original)
 
-X_train <- get_subset_all(train_original)
-X_test <- get_subset_all(test_original)
+yhat <- get_nn_X_Pred()
 
-
-input <- layer_input_from_dataset(X_train %>% select(-risk_cases_numbers))
-
-output <- input %>% 
-  layer_dense_features(dense_features(spec)) %>% 
-  layer_dense(units = 64, activation = "relu") %>%
-  layer_dense(units = 64, activation = "relu") %>%
-  layer_dense(units = 1) 
-
-model <- keras_model(input, output)
-summary(model)
+length(yhat)
+count(data_all)
 
 
-
-
-
-
-set.seed(1)
-
-fun <- function(arg) {
-  ret <- 0
-  if (arg == "high"){
-    ret <- 1
-  }
-  ret
-}
-
-X_train$risk_cases_numbers <- sapply(X_train$risk_cases_numbers, fun)
-
-n <- neuralnet(risk_cases_numbers~ .,
-               data = X_train,
-               hidden = 3,
-               err.fct = "ce",
-               linear.output = FALSE,
-               lifesign = 'full',
-               rep = 5,
-               algorithm = "rprop+",
-               threshold = 0.3,
-               stepmax = 100000)
-Predict=compute(n,test)
+plot_pca_groups(select(data_all, -risk_cases_numbers), yhat) + 
+  ggtitle("PCA on Set All with ANN")
+ggsave(".\\charts\\pca_nn.png",
+       width = 6.5,  height = 3,  units =  "in"
+)
